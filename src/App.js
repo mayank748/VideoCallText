@@ -21,15 +21,18 @@ height: 100%;
 object-fit: cover;
 `;
 
-var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
-// var socket = io("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
+// var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
+var socket = io("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
 
 const App = props => {
     const socketRef = useRef();
     const userVideo = useRef();
     const partnerVideo = useRef();
     const mypeer = useRef();
-    const roomID = 'erreportingdemoEZ001'
+    // let roomID ='erreportingdemoEZ007'
+    let roomID ='MayankSingh'
+
+    // const [roomID,setRoomID]=useState('erreportingdemoEZ007')
 
     const [users, setUsers] = useState({});
     const [stream, setStream] = useState();
@@ -39,19 +42,36 @@ const App = props => {
     const [callAccepted, setCallAccepted] = useState(false);
     const [callRejected, setCallRejected] = useState(false);
 
-    const [isFullScreen, setFullScreen] = useState(false);
+    const [managerStatus, setManagerStatus] = useState(false);
     const [cameraText, setCameraText] = useState('Stop Video');
     const [audioText, setAudioText] = useState('Mute');
-    const [callStatus, setCallStatus] = useState('Calling...');
+    const [callerData, setCallerData] = useState();
+    const [callerValue,setCallerValue]=useState();
 
     useEffect(() => {
         socketRef.current = socket;
         console.log(socket);
-        socketRef.current.emit('mobileNumber', roomID);
-        // socketRef.current.on("yourID", (id) => {
-        //     console.log(id);
-        //     setYourID(id);
-        // })
+        socketRef.current.emit('mobileNumber',
+        roomID={
+            storeManager2:{
+                name:'Maya',
+                isOnline:false,
+                isBusy:false
+            },
+            storeManager1:{
+                name:'MayankSingh',
+                isOnline:true,
+                isBusy:false
+            },
+            storeManager3:{
+                name:'Rohit',
+                isOnline:false,
+                isBusy:false
+            }
+        });
+        socketRef.current.on('callGoingTo',data=>{
+            console.log('callGoingTo', data)
+        });
         socketRef.current.on("allUsers", (users) => {
             console.log(users);
             setUsers(users);
@@ -59,17 +79,38 @@ const App = props => {
         socketRef.current.on("hey", (data) => {
             console.log('hey', data);
             setReceivingCall(true);
+            setManagerStatus(true)
+            socketRef.current.emit('storemanagerStatus', true);  
             // ringtoneSound.play();
             setCaller(data.from);
             setCallerSignal(data.signal);
             socketRef.current.emit('partnerOnline', 'online', data);
         })
-        socketRef.current.on('callStopedAutomatically', () => {
+        socketRef.current.on('close', () => {
             console.log('call stoped');
             rejectCall()
         });
+        socketRef.current.on('callerDetails',data=>{
+            console.log('callerDetails',data);
+            var value=data.customerName+data.mobile
+            console.log(value)
+            setCallerValue(value)
+        });
 
     }, []);
+    useEffect(()=>{
+        callerValueStatus();
+    },[]);
+
+    function callerValueStatus(){
+        socketRef.current.on('mangerStatus',status=>{
+            console.log('status',status);
+            // if(status===null || status===false){
+            //     console.log('inside if ',status)
+            //     setCallerData(callerValue);
+            // }
+        })
+    }
 
     function acceptCall() {
         //   ringtoneSound.stop();
@@ -115,6 +156,8 @@ const App = props => {
         //   ringtoneSound.unload();
         setCallRejected(true)
         socketRef.current.emit('rejected', { to: caller })
+        socketRef.current.emit('storemanagerStatus', false);  
+        setManagerStatus(false)
     }
 
     function stopCall() {
@@ -123,6 +166,8 @@ const App = props => {
         mypeer.current.destroy()
         console.log('mypeer after destroying', mypeer);
         socketRef.current.emit('close', { to: caller })
+        socketRef.current.emit('storemanagerStatus', false);  
+        setManagerStatus(false)
     }
 
     function updateAudio() {
@@ -164,7 +209,7 @@ const App = props => {
         incomingCall = (
             <div className="incoming_call_container">
                 <div>
-                    {caller ? <div className='ringing_text' ><label><span>{caller} is calling you...</span></label></div> : null}
+                    {caller ? <div className='ringing_text' ><label><span>{callerData} is calling you...</span></label></div> : null}
                 </div>
                 <div className="incoming_call_btn">
                     <button name="accept" className="accept_user" onClick={() => acceptCall()}>acceptCall</button>
@@ -175,6 +220,7 @@ const App = props => {
     } else {
 
     }
+
     return (
         <div>
             <h1>Store Demo</h1>
@@ -220,6 +266,7 @@ const App = props => {
                     </div>
                 </div>
             </div>
+            <h1>Map component</h1>
             <MapComponent />
         </div>
     )
