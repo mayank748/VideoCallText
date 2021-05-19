@@ -22,17 +22,17 @@ height: 100%;
 object-fit: cover;
 `;
 
-var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
-//var socket = io.connect("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
+// var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
+var socket = io.connect("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
 
 const Trail = props => {
     const socketRef = useRef();
     const userVideo = useRef();
     const partnerVideo = useRef();
     const mypeer = useRef();
-let roomID = 'erreportingdemoEZ001';
+    // let roomID = 'erreportingdemoEZ001';
     console.log('props',props)
-    // let roomID=props.match.params.roomID;
+    let roomID=props.match.params.roomID;
     // let roomID ='MayankSingh'
 
     // const [roomID,setRoomID]=useState('erreportingdemoEZ007')

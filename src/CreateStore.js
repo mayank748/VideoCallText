@@ -14,7 +14,8 @@ class CreateStore extends Component{
         })
     }
     storeManager=()=>{
-        this.props.history.push(`/store/${this.state.roomID}`);
+        console.log('props',this.props);
+        this.props.history.push(`/${this.state.roomID}`);
     }
 render(){
     return(
