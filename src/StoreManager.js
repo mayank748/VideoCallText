@@ -43,12 +43,6 @@ const StoreManager =(props)=> {
     // let mangerValue=managerDetails.storeCode+managerDetails.managerCode;
     //let socket=itemValue.socketRef.current
     // const [mangerValue,setmangerValue]=useState('erreportingdemoEZ007')
-    var managerDetails = {
-        managerCode:props.match.params.managerValue ,
-        storeCode: roomID,
-        isOnline: true,
-        isBusy: false
-    }
     const [users, setUsers] = useState({});
     const [stream, setStream] = useState();
     const [receivingCall, setReceivingCall] = useState(false);
@@ -64,6 +58,13 @@ const StoreManager =(props)=> {
     const [callerValue, setCallerValue] = useState();
     const [facingVariable, setFacingVariable] = useState("user");
     const [flipClicked, setFlipClicked] = useState(false);
+
+    var managerDetails = {
+        managerCode:props.match.params.managerValue ,
+        storeCode: roomID,
+        isOnline: true,
+        isBusy: managerStatus
+    }
 
     useEffect(() => {
         socketRef.current = socket;
@@ -112,13 +113,6 @@ const StoreManager =(props)=> {
             const peer = new Peer({
                 initiator: false,
                 trickle: false,
-                // iceServers: [{
-                //     urls: "stun:stun.services.mozilla.com",
-                //     username: "louis@mozilla.com",
-                //     credential: "webrtcdemo"
-                // }, {
-                //     urls: ["stun:stun.example.com", "stun:stun-1.example.com"]
-                // }],
                 stream: stream
             });
 
@@ -126,7 +120,11 @@ const StoreManager =(props)=> {
 
             peer.on("signal", data => {
                 console.log('signal data', data);
-                socketRef.current.emit("acceptCall", { signal: data, to: caller })
+                socketRef.current.emit("acceptCall", {
+                    mangerCode:mangerCode,
+                    storeCode:roomID,
+                    signal: data,
+                    to: caller })
             })
 
             peer.on("stream", stream => {
