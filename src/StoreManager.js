@@ -22,8 +22,8 @@ height: 100%;
 object-fit: cover;
 `;
 
-// var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
-var socket = io.connect("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
+var socket = io.connect("https://ndjs-test-video.shopster.chat", { transports: ['websocket', 'polling', 'flashsocket'] });
+//var socket = io.connect("http://localhost:3003/", { transports: ['websocket', 'polling', 'flashsocket'] });
 
 const StoreManager =(props)=> {
     const socketRef = useRef();
@@ -67,6 +67,7 @@ const StoreManager =(props)=> {
     }
 
     useEffect(() => {
+        console.log('inside use state')
         socketRef.current = socket;
         console.log(socket);
         socketRef.current.emit('mobileNumber',roomID);
@@ -83,7 +84,7 @@ const StoreManager =(props)=> {
             console.log('hey', data);
             setReceivingCall(true);
             setManagerStatus(true)
-            socketRef.current.emit('storemanagerStatus', true);
+            // socketRef.current.emit('storemanagerStatus', true);
             // ringtoneSound.play();
             setCaller(data.from);
             setCallerSignal(data.signal);
@@ -99,6 +100,9 @@ const StoreManager =(props)=> {
             console.log(value)
             setCallerValue(value)
         });
+        socketRef.current.on('notBusyManager',data=>{
+            setReceivingCall(false);
+        })
 
     }, []);
     function acceptCall() {
@@ -121,7 +125,8 @@ const StoreManager =(props)=> {
             peer.on("signal", data => {
                 console.log('signal data', data);
                 socketRef.current.emit("acceptCall", {
-                    mangerCode:mangerCode,
+                    managerDetails:managerDetails,
+                    managerCode:mangerCode,
                     storeCode:roomID,
                     signal: data,
                     to: caller })
@@ -138,7 +143,7 @@ const StoreManager =(props)=> {
             })
 
             peer.on('close', () => {
-
+                window.location.reload();
             })
             peer.signal(callerSignal);
 
@@ -161,6 +166,7 @@ const StoreManager =(props)=> {
         socketRef.current.emit('rejected', { to: caller })
         socketRef.current.emit('storemanagerStatus', false);
         setManagerStatus(false)
+        window.location.reload();
     }
 
     function stopCall() {
@@ -171,6 +177,7 @@ const StoreManager =(props)=> {
         socketRef.current.emit('close', { to: caller })
         socketRef.current.emit('storemanagerStatus', false);
         setManagerStatus(false)
+        window.location.reload();
     }
 
     function updateAudio() {
@@ -178,8 +185,7 @@ const StoreManager =(props)=> {
         var item = document.getElementById('mute_audio');
         item.className = stream.getAudioTracks()[0].enabled ? '' : 'unmute_icon active';
         // setAudioIcon(stream.getAudioTracks()[0].enabled ? icons.ummuteIcon : icons.muteIcon)
-        setAudioText(stream.getAudioTracks()[0].enabled ? 'Mute' : 'Un mute')
-
+        setAudioText(stream.getAudioTracks()[0].enabled ? 'Mute' : 'Un mute')   
     }
 
     function updateVedio() {
