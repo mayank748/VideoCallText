@@ -31,6 +31,7 @@ const StoreManager = (props) => {
     const partnerVideo = useRef();
     const mypeer = useRef();
     let reciverCode=useRef();
+    let roomIDRef=useRef()
     // let mangerValue = 'erreportingdemoEZ001';
     // console.log('props',props)
     // console.log('itemValue',itemValue)
@@ -73,6 +74,7 @@ const StoreManager = (props) => {
         console.log('inside use state')
         socketRef.current = socket;
         reciverCode.current=mangerValue;
+        roomIDRef.current=roomID;
         console.log(socket);
         socketRef.current.emit('mobileNumber', roomID);
         socketRef.current.emit('storeOnline', mangerValue);
@@ -98,7 +100,7 @@ const StoreManager = (props) => {
         })
         socketRef.current.on('close', (data) => {
             console.log('call stoped');
-            rejectCall(data,reciverCode.current);
+            rejectCall(data,reciverCode.current,roomIDRef.current);
         });
 
         // socketRef.current.on('rejected',()=>{
@@ -179,17 +181,18 @@ const StoreManager = (props) => {
         }).catch((error) => { console.log("error in catch block", error) })
     }
 
-    function rejectCall(data,managerValue) {
+    function rejectCall(data,managerValue,roomID) {
         //   ringtoneSound.unload();
         setCallRejected(true)
         socketRef.current.emit('rejected', { to: caller })
         socketRef.current.emit('storemanagerStatus', false);
         console.log('receivingCall', receivingCall,'callAccepted',callAccepted)
-        setManagerStatus(false)
-        if (data===managerValue) {
+        console.log('roomId',roomID,'data',data,'managerValue',managerValue);
+        if (data.to===managerValue || data.to===roomID) {
             managerDetails.isBusy = false;
             socketRef.current.emit('callingManagerDetails', managerDetails);
         }
+        setManagerStatus(false)
         // window.location.reload();
     }
 
