@@ -149,10 +149,11 @@ const Trail = props => {
             peer.on('error', (err) => {
                 console.log('error in peer', err);
                 // window.location.reload()
+                socketRef.current.emit("callEndedAuto", roomID)
             })
 
             peer.on('close', () => {
-
+                socketRef.current.emit("callEndedAuto", roomID)
             })
             peer.signal(callerSignal);
 

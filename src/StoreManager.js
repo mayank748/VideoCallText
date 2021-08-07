@@ -30,8 +30,8 @@ const StoreManager = (props) => {
     const userVideo = useRef();
     const partnerVideo = useRef();
     const mypeer = useRef();
-    let reciverCode=useRef();
-    let roomIDRef=useRef()
+    let reciverCode = useRef();
+    let roomIDRef = useRef()
     // let mangerValue = 'erreportingdemoEZ001';
     // console.log('props',props)
     // console.log('itemValue',itemValue)
@@ -67,14 +67,14 @@ const StoreManager = (props) => {
         storeCode: roomID,
         isOnline: true,
         isBusy: managerStatus,
-        isCalling:callingState
+        isCalling: callingState
     }
 
     useEffect(() => {
-        console.log('inside use state')
+        console.log('inside use effect')
         socketRef.current = socket;
-        reciverCode.current=mangerValue;
-        roomIDRef.current=roomID;
+        reciverCode.current = mangerValue;
+        roomIDRef.current = roomID;
         console.log(socket);
         socketRef.current.emit('mobileNumber', roomID);
         socketRef.current.emit('storeOnline', mangerValue);
@@ -100,8 +100,9 @@ const StoreManager = (props) => {
         })
         socketRef.current.on('close', (data) => {
             console.log('call stoped');
-            rejectCall(data,reciverCode.current,roomIDRef.current);
+            rejectCall(data, reciverCode.current, roomIDRef.current);
         });
+        // socketRef.current.emit("callEndedAuto", roomID)
 
         // socketRef.current.on('rejected',()=>{
         //     console.log('callAccepted',callAccepted)
@@ -119,11 +120,46 @@ const StoreManager = (props) => {
             setReceivingCall(false);
         })
 
-        socketRef.current.on('userEngaged',data=>{
-            console.log('userEngaged',data);
+        socketRef.current.on('userEngaged', data => {
+            console.log('userEngaged', data);
         })
 
+        // socketRef.current.on('disconnect',()=>{
+        //     navigationType();
+        // })
+        socketRef.current.on("reconnect", (attempt) => {
+            console.log('reconnected');
+        });
+
+        if (performance.navigation.type == performance.navigation.TYPE_RELOAD) {
+            console.log("This page is reloaded");
+            socketRef.current.emit('storeManagerRefreshed', 'result');
+        } else {
+            console.info("This page is not reloaded");
+        }
     }, []);
+
+    function navigationType() {
+
+        var result;
+        var p;
+
+        if (window.performance.navigation) {
+            result = window.performance.navigation;
+            if (result == 255) { result = 4 } // 4 is my invention!
+        }
+
+        if (window.performance.getEntriesByType("navigation")) {
+            p = window.performance.getEntriesByType("navigation")[0].type;
+
+            if (p == 'navigate') { result = 0 }
+            if (p == 'reload') { result = 1 }
+            if (p == 'back_forward') { result = 2 }
+            if (p == 'prerender') { result = 3 } //3 is my invention!
+        }
+        socketRef.current.on('storeManagerRefreshed', result);
+    }
+
     function acceptCall() {
         //   ringtoneSound.stop();
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
@@ -144,7 +180,7 @@ const StoreManager = (props) => {
             peer.on("signal", data => {
                 console.log('signal data', data);
                 socketRef.current.emit("acceptCall", {
-                    userDetaisl:callerValue,
+                    userDetaisl: callerValue,
                     managerDetails: managerDetails,
                     managerCode: mangerCode,
                     storeCode: roomID,
@@ -161,10 +197,12 @@ const StoreManager = (props) => {
             peer.on('error', (err) => {
                 console.log('error in peer', err);
                 // window.location.reload()
+                socketRef.current.emit("callEndedAuto", roomID)
             })
 
             peer.on('close', () => {
                 // window.location.reload();
+                socketRef.current.emit("callEndedAuto", roomID)
             })
             peer.signal(callerSignal);
 
@@ -181,14 +219,14 @@ const StoreManager = (props) => {
         }).catch((error) => { console.log("error in catch block", error) })
     }
 
-    function rejectCall(data,managerValue,roomID) {
+    function rejectCall(data, managerValue, roomID) {
         //   ringtoneSound.unload();
         setCallRejected(true)
         socketRef.current.emit('rejected', { to: caller })
         socketRef.current.emit('storemanagerStatus', false);
-        console.log('receivingCall', receivingCall,'callAccepted',callAccepted)
-        console.log('roomId',roomID,'data',data,'managerValue',managerValue);
-        if (data.to===managerValue || data.to===roomID) {
+        console.log('receivingCall', receivingCall, 'callAccepted', callAccepted)
+        console.log('roomId', roomID, 'data', data, 'managerValue', managerValue);
+        if (data.to === managerValue || data.to === roomID) {
             managerDetails.isBusy = false;
             socketRef.current.emit('callingManagerDetails', managerDetails);
         }
@@ -207,6 +245,7 @@ const StoreManager = (props) => {
         managerDetails.isCalling = false;
         socketRef.current.emit('callingManagerDetails', managerDetails);
         setManagerStatus(false)
+        // socketRef.current.on('storeManagerRefreshed', 'result');
         // window.location.reload();
     }
 
